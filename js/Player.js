@@ -1,5 +1,5 @@
 import {IsGround} from "./utils.js";
-import {dash, dizzy, fall, idle, jump, roll, run, sit} from "./state.js";
+import {dash, dizzy, fall, idle, jump, roll, run, shovel, sit} from "./state.js";
 
 export class Player
 {
@@ -8,7 +8,7 @@ export class Player
 		this.game = game;
 		this.keys = keys;
 		this.image = new Image();
-		this.image.src = 'res/img/dog/dog.png';
+		this.image.src = 'res/img/character/dog/dog.png';
 		this.size = 0.25;
 		this.SpriteWidth = 573;
 		this.SpriteHeight = 523;
@@ -28,10 +28,11 @@ export class Player
 		this.radius = this.width * 0.35;
 		this.PlayerIterval = 1000 / this.FPS;
 		this.PlayerTimer = 0;
-		this.states = [new run(this, this.game), new idle(this, this.game), new jump(this, this.game), new fall(this, this.game), new sit(this, this.game), new roll(this, this.game), new dash(this, this.game), new dizzy(this, this.game)];
+		this.states = [new run(this, this.game), new idle(this, this.game), new jump(this, this.game), new fall(this, this.game), new sit(this, this.game), new roll(this, this.game), new dash(this, this.game), new dizzy(this, this.game), new shovel(this, this.game)];
 		this.currentState = this.states[1];
 		this.currentState.enter();
 		this.immunity = false;
+		this.shovelCd = true;
 	}
 
 
@@ -46,7 +47,11 @@ export class Player
 		this.immunity = false;
 		if (this.PlayerTimer > this.PlayerIterval)
 		{
-			if (this.FrameX >= this.MaxFrame) this.FrameX = 0;
+			if (this.FrameX >= this.MaxFrame)
+			{
+				this.FrameX = 0;
+				this.shovelCd = true;
+			}
 			else this.FrameX++;
 			this.PlayerTimer = 0;
 		}
@@ -57,7 +62,11 @@ export class Player
 		else if (this.keys.includes('a')) this.Speed = this.MaxSpeedX * -1.55;
 		else this.Speed = 0;
 		this.x += this.Speed;
-		if (this.keys.includes('w') && IsGround(this)) this.Vy -= this.MaxVy;
+		if (this.keys.includes('w') && IsGround(this))
+		{
+			this.Vy = 0;
+			this.Vy -= this.MaxVy;
+		}
 		else if (!IsGround(this)) this.Vy += this.gravity;
 		else this.Vy = 0;
 		this.y += this.Vy;

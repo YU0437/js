@@ -1,32 +1,12 @@
-class Enemy
+import {ClassCommon} from "./classCommon.js";
+
+class Enemy extends ClassCommon
 {
 	constructor(game)
 	{
-		this.game = game;
-		this.FPS = 20;
+		super(game)
 		this.EnemyInterval = 1000 / this.FPS;
-		this.Timer = 0;
-		this.MaxFrame = 0;
-		this.markForDelete = false;
-
-		this.image = new Image();
-		this.FrameX = 0;
-		this.FrameY = 0;
-		this.size = 0;
-		this.SpriteWidth = 0;
-		this.SpriteHeight = 0;
-		this.width = 0;
-		this.height = 0;
-		this.x = 0;
-		this.y = 0;
-		this.radius = this.width * 0.35;
 	}
-
-	draw()
-	{
-		this.game.ctx.drawImage(this.image, this.FrameX * this.SpriteWidth, this.FrameY * this.SpriteHeight, this.SpriteWidth, this.SpriteHeight, this.x, this.y, this.width, this.height);
-	}
-
 
 	update(deltaTime, rotate)
 	{
@@ -46,10 +26,22 @@ class Enemy
 		}
 		else this.Timer += deltaTime;
 		if (this.x + this.width < 0) this.markForDelete = true;
-
-
 	}
 
+	enter()
+	{
+		if (this.game.player.immunity === false)
+		{
+			this.game.player.SetState(7, 0);
+			this.game.heart--;
+		}
+		else
+		{
+			this.game.gold++;
+			this.game.death.push(new Slash(this.game, this.x, this.y, this.size));
+		}
+		this.markForDelete = true;
+	}
 }
 
 export class Eye extends Enemy
@@ -58,7 +50,7 @@ export class Eye extends Enemy
 	{
 		super(game);
 		this.image = new Image();
-		this.image.src = 'res/img/eye/eye_Sheet.png';
+		this.image.src = 'res/img/beast/eye/eye_Sheet.png';
 		this.size = 1.5;
 		this.SpriteWidth = 156;
 		this.SpriteHeight = 128;
@@ -89,7 +81,7 @@ export class Frog extends Enemy
 	{
 		super(game);
 		this.image = new Image();
-		this.image.src = 'res/img/Frog/Frog.png';
+		this.image.src = 'res/img/beast/Frog/Frog.png';
 		this.size = 3;
 		this.SpriteWidth = 48;
 		this.SpriteHeight = 48;
@@ -109,5 +101,45 @@ export class Frog extends Enemy
 		this.x -= this.game.gameSpeed;
 
 		super.update(deltaTime, this.rotate);
+	}
+}
+
+
+class Death extends Enemy
+{
+	constructor(game, x, y, size)
+	{
+		super(game);
+		this.x = x;
+		this.y = y;
+		this.size = size;
+		this.markForDelete = false;
+	}
+
+	update(deltaTime)
+	{
+		if (this.FrameX >= this.MaxFrame) this.markForDelete = true;
+		super.update(deltaTime);
+	}
+}
+
+export class Slash extends Death
+{
+	constructor(game, x, y, size)
+	{
+		super(game, x, y, size);
+		this.image.src = 'res/img/death/Slash.png';
+		this.SpriteWidth = 64;
+		this.SpriteHeight = 64;
+		this.width = this.SpriteWidth * this.size;
+		this.height = this.SpriteHeight * this.size;
+		this.MaxFrame = 8;
+		this.FrameX = 0;
+		this.FrameY = 0;
+	}
+
+	draw()
+	{
+		this.game.ctx.drawImage(this.image, this.FrameY * this.SpriteWidth, this.FrameX * this.SpriteHeight, this.SpriteWidth, this.SpriteHeight, this.x, this.y, this.width, this.height);
 	}
 }

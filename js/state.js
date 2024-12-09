@@ -10,6 +10,7 @@ const states = {
 	Roll: 5,
 	Dash: 6,
 	Dizzy: 7,
+	Shovel: 8,
 }
 
 class State
@@ -17,8 +18,8 @@ class State
 	constructor(state)
 	{
 		this.state = state;
-
 	}
+
 }
 
 export class run extends State
@@ -39,10 +40,12 @@ export class run extends State
 
 	Input()
 	{
+
 		this.game.particular.push(new Dust(this.game));
 		if (this.player.keys.includes('w')) this.player.SetState(states.Jump, 1);
 		else if (this.player.keys.includes('s')) this.player.SetState(states.Sit, 0);
 		else if (this.player.keys.includes('f')) this.player.SetState(states.Roll, 2.5);
+		else if (this.player.keys.includes('e') && IsGround(this.player) && this.player.shovelCd) this.player.SetState(states.Shovel, 2);
 		else if (this.player.keys.length === 0) this.player.SetState(states.Idle, 1);
 	}
 }
@@ -58,6 +61,7 @@ export class jump extends State
 
 	enter()
 	{
+
 		this.player.FrameX = 0;
 		this.player.FrameY = 1;
 		this.player.MaxFrame = 6;
@@ -84,6 +88,7 @@ export class fall extends State
 
 	enter()
 	{
+
 		this.player.FrameX = 0;
 		this.player.FrameY = 2;
 		this.player.MaxFrame = 6;
@@ -121,8 +126,8 @@ export class roll extends State
 		this.player.immunity = true;
 		this.game.particular.push(new Fire(this.game));
 		if (IsGround(this.player)) this.game.particular.push(new Dust(this.game));
-		if (this.player.keys.includes('s') && !IsGround(this.player)) this.player.SetState(states.Dash, 1.5);
-		else if (this.player.keys.includes('f') && IsGround(this.player) && this.player.FrameX > 1) this.player.SetState(states.Idle, 1);
+		if (this.player.keys.includes('s')) this.player.SetState(states.Dash, 1.5);
+		if (this.player.keys.includes('s') && IsGround(this.player)) this.player.SetState(states.Shovel, 2);
 	}
 
 }
@@ -149,6 +154,7 @@ export class idle extends State
 		else if (this.player.keys.includes('a')) this.player.SetState(states.Run, 1);
 		else if (this.player.keys.includes('d')) this.player.SetState(states.Run, 1);
 		else if (this.player.keys.includes('s')) this.player.SetState(states.Sit, 0);
+		else if (this.player.keys.includes('e') && IsGround(this.player) && this.player.shovelCd) this.player.SetState(states.Shovel, 2);
 		else if (this.player.keys.includes('f') && this.player.FrameX > 1) this.player.SetState(states.Roll, 2.5);
 	}
 
@@ -161,10 +167,13 @@ export class sit extends State
 		super('Sit');
 		this.player = player;
 		this.game = game;
+
+
 	}
 
 	enter()
 	{
+
 		this.player.FrameX = 0;
 		this.player.FrameY = 5;
 		this.player.MaxFrame = 4;
@@ -172,6 +181,7 @@ export class sit extends State
 
 	Input()
 	{
+
 		if (this.player.keys.includes('w')) this.player.SetState(states.Jump, 1);
 		else if ((this.player.keys.includes('a') || this.player.keys.includes('d')) && this.player.keys.indexOf('s') === -1) this.player.SetState(states.Run, 1);
 		else
@@ -242,4 +252,37 @@ export class dizzy extends State
 		if (this.player.FrameX >= this.player.MaxFrame && IsGround(this.player)) this.player.SetState(states.Idle, 1);
 		else if (this.player.FrameX >= this.player.MaxFrame && !IsGround(this.player)) this.player.SetState(states.Fall, 1);
 	}
+}
+
+export class shovel extends State
+{
+	constructor(player, game)
+	{
+		super('shovel');
+		this.player = player;
+		this.game = game;
+	}
+
+	enter()
+	{
+		this.player.FrameX = 0;
+		this.player.FrameY = 7;
+		this.player.MaxFrame = 6;
+	}
+
+	Input()
+	{
+
+		this.player.immunity = true;
+		this.Speed = this.MaxSpeedX * 1.5;
+		if (Math.random() > 0.4) this.game.particular.push(new Dust(this.game));
+		else this.game.particular.push(new Splash(this.game));
+		if (this.player.FrameX >= this.player.MaxFrame)
+		{
+			this.player.shovelCd = false;
+			this.player.SetState(states.Run, 1);
+		}
+
+	}
+
 }
